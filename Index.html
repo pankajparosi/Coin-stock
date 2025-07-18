@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mindful Moments | Meditation App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6A8CAF',
+                        secondary: '#8FB3CB',
+                        accent: '#F4A261',
+                        background: '#F5F7FA',
+                        text: '#333333',
+                        card: '#FFFFFF',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #F5F7FA;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            touch-action: manipulation;
+        }
+        
+        .app-container {
+            max-width: 480px;
+            height: 100vh;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            background: linear-gradient(to bottom, #8FB3CB, #F5F7FA);
+        }
+        
+        /* Disable zoom and selection */
+        body, html {
+            touch-action: pan-x pan-y;
+            overscroll-behavior: none;
+        }
+        
+        .meditation-card {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .meditation-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-out;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        
+        .overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 15;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        .session-button {
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .session-button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .progress-ring {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+        
+        .breath-animation {
+            animation: breathe 8s infinite ease-in-out;
+        }
+        
+        @keyframes breathe {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container flex flex-col bg-background">
+        <!-- Overlay for sidebar -->
+        <div class="overlay" id="overlay"></div>
+        
+        <!-- Top Header -->
+        <header class="bg-primary py-4 px-6 flex items-center justify-between text-white shadow-md z-10">
+            <button id="menu-btn" class="text-xl focus:outline-none">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="text-xl font-semibold">Mindful Moments</h1>
+            <div class="w-6"></div> <!-- Spacer for symmetry -->
+        </header>
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar fixed top-0 left-0 h-full w-64 bg-card z-20">
+            <div class="p-6 bg-primary text-white h-32 flex flex-col justify-end">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-primary mr-3">
+                        <i class="fas fa-user text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold">Alex Morgan</h3>
+                        <p class="text-sm opacity-80">Premium Member</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="py-4">
+                <ul>
+                    <li class="px-6 py-3 flex items-center text-text hover:bg-secondary hover:text-white cursor-pointer">
+                        <i class="fas fa-home mr-3"></i> Home
+                    </li>
+                    <li class="px-6 py-3 flex items-center text-text hover:bg-secondary hover:text-white cursor-pointer">
+                        <i class="fas fa-heart mr-3"></i> My Journey
+                    </li>
+                    <li class="px-6 py-3 flex items-center text-text hover:bg-secondary hover:text-white cursor-pointer">
+                        <i class="fas fa-music mr-3"></i> Sound Library
+                    </li>
+                    <li class="px-6 py-3 flex items-center text-text hover:bg-secondary hover:text-white cursor-pointer">
+                        <i class="fas fa-moon mr-3"></i> Sleep Stories
+                    </li>
+                    <li class="px-6 py-3 flex items-center text-text hover:bg-secondary hover:text-white cursor-pointer">
+                        <i class="fas fa-cog mr-3"></i> Settings
+                    </li>
+                    <li class="px-6 py-3 flex items-center text-text hover:bg-secondary hover:text-white cursor-pointer">
+                        <i class="fas fa-sign-out-alt mr-3"></i> Log Out
+                    </li>
+                </ul>
+            </nav>
+            <div class="absolute bottom-0 w-full p-6 text-center text-sm text-gray-500">
+                Version 2.1.0
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto pb-20 pt-4 px-4" id="main-content">
+            <!-- Home Screen -->
+            <div id="home-screen">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-semibold text-text mb-2">Good Morning, Alex</h2>
+                    <p class="text-gray-600">Take a deep breath. You're doing great.</p>
+                </div>
+                
+                <!-- Stats Summary -->
+                <div class="bg-card rounded-xl p-4 mb-6 shadow-sm">
+                    <div class="flex justify-between">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-accent">12</div>
+                            <div class="text-sm text-gray-600">Sessions</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-accent">8h 42m</div>
+                            <div class="text-sm text-gray-600">Total Time</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-accent">7</div>
+                            <div class="text-sm text-gray-600">Streak</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Featured Session -->
+                <div class="bg-gradient-to-r from-primary to-secondary rounded-xl p-4 mb-6 text-white">
+                    <h3 class="font-bold text-lg mb-2">Featured Session</h3>
+                    <p class="text-sm mb-4">Morning Calm: Start your day with peace</p>
+                    <button class="bg-white text-primary py-2 px-4 rounded-full text-sm font-semibold">Start Now</button>
+                </div>
+                
+                <!-- Recommended Sessions -->
+                <h3 class="font-semibold text-lg text-text mb-3">Recommended for You</h3>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="meditation-card bg-card rounded-xl p-4 text-center">
+                        <div class="w-12 h-12 bg-secondary rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-wind text-white text-xl"></i>
+                        </div>
+                        <h4 class="font-medium mb-1">Breath Focus</h4>
+                        <p class="text-xs text-gray-600 mb-2">5 min • Beginner</p>
+                    </div>
+                    
+                    <div class="meditation-card bg-card rounded-xl p-4 text-center">
+                        <div class="w-12 h-12 bg-accent rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-moon text-white text-xl"></i>
+                        </div>
+                        <h4 class="font-medium mb-1">Sleep Relax</h4>
+                        <p class="text-xs text-gray-600 mb-2">15 min • Intermediate</p>
+                    </div>
+                    
+                    <div class="meditation-card bg-card rounded-xl p-4 text-center">
+                        <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-heart text-white text-xl"></i>
+                        </div>
+                        <h4 class="font-medium mb-1">Self Love</h4>
+                        <p class="text-xs text-gray-600 mb-2">10 min • Beginner</p>
+                    </div>
+                    
+                    <div class="meditation-card bg-card rounded-xl p-4 text-center">
+                        <div class="w-12 h-12 bg-secondary rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-tree text-white text-xl"></i>
+                        </div>
+                        <h4 class="font-medium mb-1">Nature Sound</h4>
+                        <p class="text-xs text-gray-600 mb-2">20 min • All Levels</p>
+                    </div>
+                </div>
+                
+                <!-- Categories -->
+                <h3 class="font-semibold text-lg text-text mb-3">Categories</h3>
+                <div class="flex overflow-x-auto space-x-3 pb-2 mb-6">
+                    <div class="bg-card rounded-xl px-4 py-2 whitespace-nowrap">Stress Relief</div>
+                    <div class="bg-card rounded-xl px-4 py-2 whitespace-nowrap">Focus</div>
+                    <div class="bg-card rounded-xl px-4 py-2 whitespace-nowrap">Anxiety</div>
+                    <div class="bg-card rounded-xl px-4 py-2 whitespace-nowrap">Sleep</div>
+                    <div class="bg-card rounded-xl px-4 py-2 whitespace-nowrap">Beginners</div>
+                </div>
+            </div>
+            
+            <!-- Meditation Screen (Hidden by default) -->
+            <div id="meditation-screen" class="hidden">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-semibold text-text mb-2">Breath Awareness</h2>
+                    <p class="text-gray-600">Follow your breath to find calm</p>
+                </div>
+                
+                <div class="flex justify-center mb-8">
+                    <div class="relative">
+                        <svg width="280" height="280" viewBox="0 0 280 280">
+                            <circle cx="140" cy="140" r="120" stroke="#e5e7eb" stroke-width="12" fill="none" />
+                            <circle cx="140" cy="140" r="120" stroke="#4ade80" stroke-width="12" 
+                                    stroke-dasharray="754" stroke-dashoffset="754" 
+                                    class="progress-ring" fill="none" stroke-linecap="round" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <div class="w-40 h-40 bg-primary rounded-full flex items-center justify-center breath-animation">
+                                <div class="text-white text-center">
+                                    <div class="text-3xl font-bold" id="timer">05:00</div>
+                                    <div class="mt-2 text-sm" id="breath-text">Breathe In</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mb-8">
+                    <div class="flex justify-center space-x-4 mb-4">
+                        <button class="session-button bg-white border border-gray-300 rounded-full w-12 h-12 flex items-center justify-center">
+                            <i class="fas fa-volume-up text-primary"></i>
+                        </button>
+                        <button class="session-button bg-white border border-gray-300 rounded-full w-12 h-12 flex items-center justify-center">
+                            <i class="fas fa-heart text-primary"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex justify-center space-x-4">
+                        <button id="pause-btn" class="session-button bg-accent text-white rounded-full w-16 h-16 flex items-center justify-center">
+                            <i class="fas fa-pause"></i>
+                        </button>
+                        <button id="end-btn" class="session-button bg-white border border-gray-300 rounded-full w-16 h-16 flex items-center justify-center">
+                            <i class="fas fa-stop text-gray-600"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Bottom Navigation -->
+        <nav class="bg-card border-t border-gray-200 py-3 px-6 flex justify-around fixed bottom-0 w-full max-w-[480px] z-10">
+            <a href="#" class="text-primary flex flex-col items-center nav-item active">
+                <i class="fas fa-home text-lg"></i>
+                <span class="text-xs mt-1">Home</span>
+            </a>
+            <a href="#" class="text-gray-500 flex flex-col items-center nav-item">
+                <i class="fas fa-spa text-lg"></i>
+                <span class="text-xs mt-1">Meditate</span>
+            </a>
+            <a href="#" class="text-gray-500 flex flex-col items-center nav-item">
+                <i class="fas fa-music text-lg"></i>
+                <span class="text-xs mt-1">Sounds</span>
+            </a>
+            <a href="#" class="text-gray-500 flex flex-col items-center nav-item">
+                <i class="fas fa-user text-lg"></i>
+                <span class="text-xs mt-1">Profile</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        // Disable zoom, right click, and text selection
+        document.addEventListener('DOMContentLoaded', function() {
+            // Disable zooming
+            document.addEventListener('touchmove', function(event) {
+                if (event.scale !== 1) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Disable context menu (right click)
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+            
+            // Disable text selection
+            document.addEventListener('selectstart', function(e) {
+                e.preventDefault();
+            });
+            
+            // Initialize variables
+            const menuBtn = document.getElementById('menu-btn');
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('overlay');
+            const navItems = document.querySelectorAll('.nav-item');
+            const homeScreen = document.getElementById('home-screen');
+            const meditationScreen = document.getElementById('meditation-screen');
+            const pauseBtn = document.getElementById('pause-btn');
+            const endBtn = document.getElementById('end-btn');
+            const timerDisplay = document.getElementById('timer');
+            const breathText = document.getElementById('breath-text');
+            
+            // Meditation variables
+            let meditationTimer;
+            let timeRemaining = 300; // 5 minutes in seconds
+            let isPaused = false;
+            let isInhale = true;
+            let circle = document.querySelector('.progress-ring > circle');
+            let radius = circle.r.baseVal.value;
+            let circumference = 2 * Math.PI * radius;
+            
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            circle.style.strokeDashoffset = circumference;
+            
+            // Toggle sidebar
+            menuBtn.addEventListener('click', function() {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+            });
+            
+            // Close sidebar
+            overlay.addEventListener('click', function() {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+            
+            // Navigation click handler
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all items
+                    navItems.forEach(nav => {
+                        nav.classList.remove('active');
+                        nav.classList.add('text-gray-500');
+                        nav.classList.remove('text-primary');
+                    });
+                    
+                    // Add active class to clicked item
+                    this.classList.add('active');
+                    this.classList.remove('text-gray-500');
+                    this.classList.add('text-primary');
+                    
+                    // Handle screen switching
+                    if (this.querySelector('span').textContent === 'Meditate') {
+                        homeScreen.classList.add('hidden');
+                        meditationScreen.classList.remove('hidden');
+                        startMeditation();
+                    } else {
+                        homeScreen.classList.remove('hidden');
+                        meditationScreen.classList.add('hidden');
+                        stopMeditation();
+                    }
+                });
+            });
+            
+            // Set progress on circle
+            function setProgress(percent) {
+                const offset = circumference - (percent / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+            }
+            
+            // Start meditation session
+            function startMeditation() {
+                timeRemaining = 300;
+                isPaused = false;
+                updateTimerDisplay();
+                meditationTimer = setInterval(updateTimer, 1000);
+                breathCycle();
+                
+                // Update pause button
+                pauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            }
+            
+            // Update timer
+            function updateTimer()
